@@ -5,6 +5,8 @@ import os
 import sys  
 import procyclingstats as pcs
 import pandas as pd
+import ast
+import json
 
 # set the path to the data directory
 TOUR_DATA_DIR = os.path.join(os.path.dirname(__file__), 'tour_data')
@@ -37,8 +39,34 @@ def fetch_tdf_race_startlist():
     df = pd.DataFrame(lists)
     return df
 
-def fetch_tdf_stages(tour):
-    return
+def fetch_tdf_stages(tour_df):
+    stages = []
+    for _, row in tour_df.iterrows():
+        year = row['year']
+        try:
+            # Check if 'stages' is already a list
+            if isinstance(row['stages'], list):
+                stage_list = row['stages']
+            else:
+                # Clean up the 'stages' string to ensure it is valid JSON
+                stages_str = row['stages'].replace('""', '"').replace("'", '"')
+                stage_list = json.loads(stages_str)  # Safely parse the stages column
+
+            for stage in stage_list:
+                stage_data = {
+                    'year': year,
+                    'stage_name': stage.get('stage_name', ''),
+                    'stage_url': stage.get('stage_url', ''),
+                    'date': stage.get('date', ''),
+                }
+                
+                stage_data = pcs.Stage(stage_data['stage_url']).parse()
+                stages.append(stage_data)
+        except (json.JSONDecodeError, TypeError, AttributeError) as e:
+            print(f"Error parsing stages for year {year}: {e}")
+    
+    df = pd.DataFrame(stages)
+    return df
 
 def fetch_tdf_climbs():
     return
@@ -56,12 +84,12 @@ def save_data(df, filename):
 def main():
     race_df = fetch_tdf_race()
     save_data(race_df, TOUR_DATA_CSV)
+    
     starts_df = fetch_tdf_race_startlist()
     save_data(starts_df, TOUR_STARTLIST_CSV)
-    
-    print("fetched tours\n")
-    return
+
+    stages_df = fetch_tdf_stages(race_df)
+    save_data(stages_df, TOUR_STAGES_CSV)
 
 if __name__ == "__main__":
     main()
-    

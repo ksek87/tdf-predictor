@@ -18,6 +18,7 @@ def load_data(filename):
     return df
 
 def race_data_cleaning(df):
+    
     return df
 
 def startlist_data_cleaning(df):
@@ -29,18 +30,23 @@ def startlist_data_cleaning(df):
     df = pd.json_normalize(df['startlist'])
     return df
 
-
-
-def main():
-    # load the startlist data
+def process_startlist():
     startlist_df = load_data(TOUR_STARTLIST_CSV)
     # clean the startlist data
     cleaned_startlist_df = startlist_data_cleaning(startlist_df)
     # save the cleaned startlist data
-    if not os.path.exists(CLEAN_DATA_DIR):
-        os.makedirs(CLEAN_DATA_DIR) 
     cleaned_startlist_file = os.path.join(CLEAN_DATA_DIR, 'cleaned_' + TOUR_STARTLIST_CSV)
     cleaned_startlist_df.to_csv(cleaned_startlist_file, index=False)
+    return
+
+def main():
+    
+    if not os.path.exists(CLEAN_DATA_DIR):
+        os.makedirs(CLEAN_DATA_DIR) 
+    
+    process_startlist
+    print("Startlist data cleaned and saved.")
+    
 
 if __name__ == "__main__":
     main()
